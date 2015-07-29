@@ -2,37 +2,49 @@
 <head>
 <title>Stripe - Connect Buttons</title>
 <link rel="stylesheet" href="assets/css/style.css">
+<script src="http://ajax.microsoft.com/ajax/jquery/jquery-1.4.2.min.js" type="text/javascript"></script>
+<script src="/javascripts/git.js" type="text/javascript"></script>
+<script type="text/javascript">
+    $(function() {
+        $("#my-github-projects").loadRepositories('dozenhack');
+    });
+</script>
+
+
 </head>
 <body>
 <h3>Project</h3>
-<div id="project" name="sample-project"></div>
-<h3>Contributors</h3>
-<p id="collab"></p>
-<a id="BtnOnAction" class="btn btn-success" href="#">Submit</a>
+<div id="my-github-projects"/>
 <script>
-  $("#BtnOnAction").click(function(){
-	var dataString = {command: 'action'};
-	$.ajax({
-          url: 'appbuilder.php',
-          type: 'POST',
-          data: dataString,
-		  contentType:"application/x-www-form-urlencoded",
-          success: function(data){
-            if(data){
-				$(panelid).prepend(data);
+jQuery.githubUser = function(username, callback) {
+   jQuery.getJSON('https://api.github.com/users/'+username+'/repos?callback=?',callback)
+}
+ 
+jQuery.fn.loadRepositories = function(username) {
+    this.html("<span>Querying GitHub for " + username +"'s repositories...</span>");
+     
+    var target = this;
+    $.githubUser(username, function(data) {
+        var repos = data.data; // JSON Parsing
+        sortByName(repos);    
+     
+        var list = $('<dl/>');
+        target.empty().append(list);
+        $(repos).each(function() {
+            if (this.name != (username.toLowerCase()+'.github.com')) {
+                list.append('<dt><a href="'+ (this.homepage?this.homepage:this.html_url) +'">' + this.name + '</a> <em>'+(this.language?('('+this.language+')'):'')+'</em></dt>');
+                list.append('<dd>' + this.description +'</dd>');
             }
-            else{
-			$(this).text("Success Error!");
-            }
-          },
-          error: function(data) {
-            console.log("Ajax Error!");
-            console.log(data);
-          }
-        }); // end ajax call   
-		
-});
+        });      
+      });
+      
+    function sortByName(repos) {
+        repos.sort(function(a,b) {
+        return a.name - b.name;
+       });
+    }
+};
+
 </script>
-</div>
 </body>
 </html>
